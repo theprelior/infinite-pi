@@ -17,5 +17,9 @@ if(BUILD_REFERENCE)
 	]]
 endif()
 
+find_package(Boost REQUIRED)
+find_package(Threads REQUIRED)
+
 add_executable(pi main.cpp)
 target_compile_features(pi PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")
+target_link_libraries(pi PRIVATE Boost::boost Threads::Threads)
