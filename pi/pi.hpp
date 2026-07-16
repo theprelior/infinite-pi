@@ -68,4 +68,25 @@ SplitResult<IntType> binary_split(int a, int b) {
     };
 }
 
+// Integer square root using Newton's method: returns floor(sqrt(n))
+// Normal sqrt() works on double — loses precision for large BigInt values.
+// Newton iteration: x_{i+1} = (x_i + n / x_i) / 2  converges to floor(sqrt(n))
+
+template <Arithmetic IntType>
+IntType isqrt(const IntType& n) {
+    if (n <= 0) {
+        return IntType(0);
+    }
+
+    IntType x = IntType(1) << (mp::msb(n) / 2 + 1);
+    while (true) {
+        IntType next = (x + n / x) / 2;
+        if (next >= x) {
+            break;
+        }
+        x = next;
+    }
+    return x;
+}
+
 } // namespace pi

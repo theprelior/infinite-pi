@@ -5,27 +5,22 @@
 using BigInt = pi::mp::cpp_int;
 
 int main() {
-    // Test base case k=0: P=1, Q=1, T=13591409
-    auto r0 = pi::binary_split<BigInt>(0, 1);
-    std::cout << "binary_split(0,1):\n";
-    std::cout << "  P = " << r0.P << "\n";
-    std::cout << "  Q = " << r0.Q << "\n";
-    std::cout << "  T = " << r0.T << "\n";
+    // Basic isqrt tests
+    std::cout << "isqrt tests:\n";
+    std::cout << "  isqrt(0)     = " << pi::isqrt<BigInt>(BigInt(0))   << "  (expected 0)\n";
+    std::cout << "  isqrt(1)     = " << pi::isqrt<BigInt>(BigInt(1))   << "  (expected 1)\n";
+    std::cout << "  isqrt(9)     = " << pi::isqrt<BigInt>(BigInt(9))   << "  (expected 3)\n";
+    std::cout << "  isqrt(10)    = " << pi::isqrt<BigInt>(BigInt(10))  << "  (expected 3, floor)\n";
+    std::cout << "  isqrt(100)   = " << pi::isqrt<BigInt>(BigInt(100)) << "  (expected 10)\n";
 
-    // Test base case k=1: p(1) = -(1*1*5) = -5
-    auto r1 = pi::binary_split<BigInt>(1, 2);
-    std::cout << "\nbinary_split(1,2):\n";
-    std::cout << "  P = " << r1.P << "\n";
-    std::cout << "  Q = " << r1.Q << "\n";
-    std::cout << "  T = " << r1.T << "\n";
+    // Test with a large number
+    BigInt large("10000000000000000000000000000000000000000000000000000");
+    std::cout << "\n  isqrt(10^52) = " << pi::isqrt<BigInt>(large) << "\n";
+    std::cout << "  (expected 100000000000000000000000000)\n";
 
-    // Test merge: binary_split(0,2) should equal merging (0,1) and (1,2)
-    auto merged = pi::binary_split<BigInt>(0, 2);
-    BigInt expected_T = r0.T * r1.Q + r0.P * r1.T;
-    std::cout << "\nbinary_split(0,2) merge check:\n";
-    std::cout << "  T from merge formula = " << expected_T << "\n";
-    std::cout << "  T from binary_split  = " << merged.T << "\n";
-    std::cout << "  Match: " << (expected_T == merged.T ? "YES" : "NO") << "\n";
+    // Test the value we actually need: isqrt(10005)
+    std::cout << "\n  isqrt(10005) = " << pi::isqrt<BigInt>(BigInt(10005)) << "\n";
+    std::cout << "  (100^2=10000, 101^2=10201 → floor is 100)\n";
 
     return 0;
 }
