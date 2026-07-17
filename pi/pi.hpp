@@ -2,6 +2,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <cmath>
 #include <concepts>
 #include <string>
 
@@ -120,6 +121,12 @@ std::string compute_pi(int num_terms, int num_digits) {
         s = s.substr(0, num_digits + 1);
     }
     return s.substr(0, 1) + "." + s.substr(1);
+}
+
+// Each Chudnovsky term contributes ~14.18 digits (log10(640320^3/24) / 3)
+// Returns the number of terms needed to compute the requested digit count.
+inline int estimate_terms(int digits) {
+    return static_cast<int>(std::ceil(static_cast<double>(digits) / 14.18)) + 2;
 }
 
 } // namespace pi

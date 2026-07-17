@@ -1,18 +1,22 @@
 #include "pi.hpp"
 
+#include <cstdlib>
 #include <iostream>
 
 using BigInt = pi::mp::cpp_int;
 
-int main() {
-    // 1 term gives ~14 correct digits
-    std::cout << "1 term:   " << pi::compute_pi<BigInt>(1, 15) << "\n";
+int main(int argc, char** argv) {
+    // Default: 50 digits
+    int num_digits = 50;
+    if (argc == 2) {
+        num_digits = std::atoi(argv[1]);
+    }
 
-    // 10 terms gives ~140 digits
-    std::cout << "10 terms: " << pi::compute_pi<BigInt>(10, 50) << "\n";
+    int num_terms = pi::estimate_terms(num_digits);
 
-    // Compute to 100 decimal places
-    std::cout << "\n100 digits:\n" << pi::compute_pi<BigInt>(10, 100) << "\n";
+    std::cout << "Digits requested : " << num_digits << "\n";
+    std::cout << "Terms needed     : " << num_terms  << "\n";
+    std::cout << "pi = " << pi::compute_pi<BigInt>(num_terms, num_digits) << "\n";
 
     return 0;
 }
