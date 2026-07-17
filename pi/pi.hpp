@@ -89,4 +89,37 @@ IntType isqrt(const IntType& n) {
     return x;
 }
 
+// Compute pi to num_digits decimal places using num_terms Chudnovsky terms.
+//
+// From binary splitting:  1/pi = sqrt(10005)/4270934400 * T/Q
+// Rearranged:             pi   = 4270934400 * Q / (sqrt(10005) * |T|)
+//
+// We use fixed-point arithmetic with scale = 10^(num_digits+20) to avoid
+// losing the decimal part in integer division:
+//   pi * scale = 4270934400 * Q * scale^2 / (sqrt(10005 * scale^2) * |T|)
+
+template <Arithmetic IntType>
+std::string compute_pi(int num_terms, int num_digits) {
+    int precision = num_digits + 20;
+
+    auto result = binary_split<IntType>(0, num_terms);
+
+    IntType scale    = mp::pow(IntType(10), precision);
+    IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
+
+    IntType abs_T = result.T;
+    if (abs_T < 0) {
+        abs_T = -abs_T;
+    }
+
+    IntType pi_int = IntType(4270934400LL) * result.Q * scale * scale
+                     / (sqrt_val * abs_T);
+
+    std::string s = pi_int.str();
+    if (static_cast<int>(s.size()) > num_digits + 1) {
+        s = s.substr(0, num_digits + 1);
+    }
+    return s.substr(0, 1) + "." + s.substr(1);
+}
+
 } // namespace pi
