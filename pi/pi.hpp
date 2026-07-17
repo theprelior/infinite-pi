@@ -2,6 +2,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <chrono>
 #include <cmath>
 #include <concepts>
 #include <string>
@@ -122,6 +123,20 @@ std::string compute_pi(int num_terms, int num_digits) {
     }
     return s.substr(0, 1) + "." + s.substr(1);
 }
+
+// RAII timer: starts on construction, call elapsed_ms() to read elapsed time.
+class Timer {
+  public:
+    Timer() : start_(std::chrono::high_resolution_clock::now()) {}
+
+    [[nodiscard]] double elapsed_ms() const {
+        auto now = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration<double, std::milli>(now - start_).count();
+    }
+
+  private:
+    std::chrono::high_resolution_clock::time_point start_;
+};
 
 // Each Chudnovsky term contributes ~14.18 digits (log10(640320^3/24) / 3)
 // Returns the number of terms needed to compute the requested digit count.
