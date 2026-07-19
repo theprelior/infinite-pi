@@ -1,23 +1,40 @@
 #include "pi.hpp"
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 using BigInt = pi::mp::cpp_int;
 
 int main(int argc, char** argv) {
-    int num_digits = 50;
-    if (argc == 2) {
-        num_digits = std::atoi(argv[1]);
+    int  num_digits   = 100;
+    bool use_parallel = false;
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--parallel") == 0) {
+            use_parallel = true;
+        } else {
+            num_digits = std::atoi(argv[i]);
+        }
     }
 
     int num_terms = pi::estimate_terms(num_digits);
 
     std::cout << "Digits requested : " << num_digits << "\n";
     std::cout << "Terms needed     : " << num_terms  << "\n";
+    std::cout << "Mode             : " << (use_parallel ? "parallel" : "sequential") << "\n";
 
     pi::Timer t;
-    std::cout << "pi = " << pi::compute_pi<BigInt>(num_terms, num_digits) << "\n";
+
+    std::string result;
+    if (use_parallel) {
+        auto split = pi::parallel_binary_split<BigInt>(0, num_terms);
+        result = pi::compute_pi_from_split<BigInt>(split, num_digits);
+    } else {
+        result = pi::compute_pi<BigInt>(num_terms, num_digits);
+    }
+
+    std::cout << "pi = " << result << "\n";
     std::cout << "Time             : " << t.elapsed_ms() << " ms\n";
 
     return 0;

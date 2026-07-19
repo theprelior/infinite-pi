@@ -6,6 +6,7 @@
 #include <cmath>
 #include <concepts>
 #include <string>
+#include <thread>
 
 namespace pi {
 
@@ -70,6 +71,26 @@ SplitResult<IntType> binary_split(int a, int b) {
     };
 }
 
+template <Arithmetic IntType>
+SplitResult<IntType> parallel_binary_split(int a, int b) {
+    if (b - a <= 1) {
+        return binary_split<IntType>(a, b);
+    }
+
+    int mid = (a + b) / 2;
+    SplitResult<IntType> left, right;
+
+    std::thread t([&]() { left = binary_split<IntType>(a, mid); });
+    right = binary_split<IntType>(mid, b);
+    t.join();
+
+    return {
+        left.P * right.P,
+        left.Q * right.Q,
+        left.T * right.Q + left.P * right.T
+    };
+}
+
 // Integer square root using Newton's method: returns floor(sqrt(n))
 // Normal sqrt() works on double — loses precision for large BigInt values.
 // Newton iteration: x_{i+1} = (x_i + n / x_i) / 2  converges to floor(sqrt(n))
@@ -101,27 +122,24 @@ IntType isqrt(const IntType& n) {
 //   pi * scale = 4270934400 * Q * scale^2 / (sqrt(10005 * scale^2) * |T|)
 
 template <Arithmetic IntType>
-std::string compute_pi(int num_terms, int num_digits) {
+std::string compute_pi_from_split(const SplitResult<IntType>& result, int num_digits) {
     int precision = num_digits + 20;
-
-    auto result = binary_split<IntType>(0, num_terms);
-
     IntType scale    = mp::pow(IntType(10), precision);
     IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
-
-    IntType abs_T = result.T;
-    if (abs_T < 0) {
-        abs_T = -abs_T;
-    }
-
-    IntType pi_int = IntType(4270934400LL) * result.Q * scale * scale
-                     / (sqrt_val * abs_T);
-
+    IntType abs_T    = result.T < 0 ? -result.T : result.T;
+    IntType pi_int   = IntType(4270934400LL) * result.Q * scale * scale
+                       / (sqrt_val * abs_T);
     std::string s = pi_int.str();
     if (static_cast<int>(s.size()) > num_digits + 1) {
         s = s.substr(0, num_digits + 1);
     }
     return s.substr(0, 1) + "." + s.substr(1);
+}
+
+template <Arithmetic IntType>
+std::string compute_pi(int num_terms, int num_digits) {
+    auto result = binary_split<IntType>(0, num_terms);
+    return compute_pi_from_split<IntType>(result, num_digits);
 }
 
 // RAII timer: starts on construction, call elapsed_ms() to read elapsed time.
@@ -144,4 +162,4 @@ inline int estimate_terms(int digits) {
     return static_cast<int>(std::ceil(static_cast<double>(digits) / 14.18)) + 2;
 }
 
-} // namespace pi
+} // namespace end of pi
