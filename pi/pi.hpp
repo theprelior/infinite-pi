@@ -12,6 +12,8 @@
 #include <chrono>
 #include <cmath>
 #include <concepts>
+#include <expected>
+#include <format>
 #include <memory>
 #include <string>
 #include <thread>
@@ -216,6 +218,25 @@ std::string compute_pi(int num_terms, int num_digits) {
     return compute_pi_from_split<IntType>(result, num_digits);
 }
 
+/// @brief Validated version of compute_pi using C++23 std::expected.
+///
+/// Returns std::unexpected with a descriptive error message if num_digits <= 0.
+/// Preferred over compute_pi at API boundaries where invalid input is possible.
+///
+/// @tparam IntType An integer type satisfying the Arithmetic concept.
+/// @param num_terms Number of Chudnovsky terms to use.
+/// @param num_digits Number of decimal digits to return (must be > 0).
+/// @return Pi string on success, error description on failure.
+template <Arithmetic IntType>
+std::expected<std::string, std::string>
+compute_pi_checked(int num_terms, int num_digits) {
+    if (num_digits <= 0) {
+        return std::unexpected(
+            std::format("num_digits must be positive, got {}", num_digits));
+    }
+    return compute_pi<IntType>(num_terms, num_digits);
+}
+
 /// @brief Converts a precomputed SplitResult into a sqrt(pi) string.
 ///
 /// Computes pi × 10^(2*N) as a big integer, then applies isqrt:
@@ -252,6 +273,22 @@ template <Arithmetic IntType>
 std::string compute_sqrt_pi(int num_terms, int num_digits) {
     auto result = binary_split<IntType>(0, num_terms);
     return compute_sqrt_pi_from_split<IntType>(result, num_digits);
+}
+
+/// @brief Validated version of compute_sqrt_pi using C++23 std::expected.
+///
+/// @tparam IntType An integer type satisfying the Arithmetic concept.
+/// @param num_terms Number of Chudnovsky terms to use.
+/// @param num_digits Number of decimal digits to return (must be > 0).
+/// @return sqrt(pi) string on success, error description on failure.
+template <Arithmetic IntType>
+std::expected<std::string, std::string>
+compute_sqrt_pi_checked(int num_terms, int num_digits) {
+    if (num_digits <= 0) {
+        return std::unexpected(
+            std::format("num_digits must be positive, got {}", num_digits));
+    }
+    return compute_sqrt_pi<IntType>(num_terms, num_digits);
 }
 
 /// @brief RAII high-resolution timer.

@@ -1,8 +1,18 @@
 #include "pi.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <string_view>
 
 using BigInt = pi::mp::cpp_int;
+
+// First 100 verified decimal digits of pi (NIST reference).
+static constexpr std::string_view PI_KNOWN_100 =
+    "3.14159265358979323846264338327950288419716939937510"
+    "58209749445923078164062862089986280348253421170679";
+
+// First 50 verified decimal digits of sqrt(pi).
+static constexpr std::string_view SQRT_PI_KNOWN_50 =
+    "1.77245385090551602729816748334114518279754945612238";
 
 TEST_CASE("Arithmetic concept is satisfied", "[concepts]") {
     STATIC_REQUIRE(pi::Arithmetic<BigInt>);
@@ -74,6 +84,12 @@ TEST_CASE("estimate_terms grows with digits", "[estimate_terms]") {
     REQUIRE(pi::estimate_terms(200) < pi::estimate_terms(1000));
 }
 
+TEST_CASE("estimate_terms is constexpr", "[constexpr]") {
+    constexpr int terms = pi::estimate_terms(100);
+    STATIC_REQUIRE(terms > 0);
+    STATIC_REQUIRE(pi::estimate_terms(1000) > pi::estimate_terms(100));
+}
+
 TEST_CASE("compute_pi output", "[compute_pi]") {
     SECTION("50 digits start with 3.14159") {
         auto pi50 = pi::compute_pi<BigInt>(pi::estimate_terms(50), 50);
@@ -93,6 +109,16 @@ TEST_CASE("compute_pi output", "[compute_pi]") {
     }
 }
 
+TEST_CASE("pi matches verified reference digits", "[verification]") {
+    auto computed = pi::compute_pi<BigInt>(pi::estimate_terms(100), 100);
+    REQUIRE(computed == PI_KNOWN_100);
+}
+
+TEST_CASE("sqrt(pi) matches verified reference digits", "[verification]") {
+    auto computed = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(50), 50);
+    REQUIRE(computed == SQRT_PI_KNOWN_50);
+}
+
 TEST_CASE("compute_pi_from_split matches compute_pi", "[compute_pi]") {
     int digits = 50;
     int terms  = pi::estimate_terms(digits);
@@ -102,6 +128,38 @@ TEST_CASE("compute_pi_from_split matches compute_pi", "[compute_pi]") {
     auto via_compute = pi::compute_pi<BigInt>(terms, digits);
 
     REQUIRE(via_split == via_compute);
+}
+
+TEST_CASE("compute_pi_checked — std::expected", "[expected]") {
+    SECTION("valid input returns value") {
+        auto r = pi::compute_pi_checked<BigInt>(pi::estimate_terms(50), 50);
+        REQUIRE(r.has_value());
+        REQUIRE(r->substr(0, 7) == "3.14159");
+    }
+
+    SECTION("zero digits returns unexpected") {
+        auto r = pi::compute_pi_checked<BigInt>(5, 0);
+        REQUIRE_FALSE(r.has_value());
+        REQUIRE_FALSE(r.error().empty());
+    }
+
+    SECTION("negative digits returns unexpected") {
+        auto r = pi::compute_pi_checked<BigInt>(5, -1);
+        REQUIRE_FALSE(r.has_value());
+    }
+}
+
+TEST_CASE("compute_sqrt_pi_checked — std::expected", "[expected]") {
+    SECTION("valid input returns value") {
+        auto r = pi::compute_sqrt_pi_checked<BigInt>(pi::estimate_terms(30), 30);
+        REQUIRE(r.has_value());
+        REQUIRE(r->substr(0, 10) == "1.77245385");
+    }
+
+    SECTION("zero digits returns unexpected") {
+        auto r = pi::compute_sqrt_pi_checked<BigInt>(5, 0);
+        REQUIRE_FALSE(r.has_value());
+    }
 }
 
 TEST_CASE("parallel_binary_split matches sequential", "[parallel]") {
@@ -125,6 +183,17 @@ TEST_CASE("parallel compute_pi matches sequential", "[parallel]") {
     auto pi_seq    = pi::compute_pi<BigInt>(terms, digits);
 
     REQUIRE(pi_par == pi_seq);
+}
+
+TEST_CASE("parallel correctness across digit sizes", "[parallel]") {
+    for (int digits : {50, 100, 200}) {
+        int terms      = pi::estimate_terms(digits);
+        auto par_split = pi::parallel_binary_split<BigInt>(0, terms);
+        auto seq_split = pi::binary_split<BigInt>(0, terms);
+        REQUIRE(par_split.P == seq_split.P);
+        REQUIRE(par_split.Q == seq_split.Q);
+        REQUIRE(par_split.T == seq_split.T);
+    }
 }
 
 TEST_CASE("PiComputer", "[PiComputer]") {
