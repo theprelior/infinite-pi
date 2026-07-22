@@ -23,6 +23,19 @@ if(DOXYGEN_FOUND)
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Generating documentation with Doxygen"
     VERBATIM)
+
+  find_program(SPHINX_BUILD sphinx-build
+    HINTS /home/theprelior/miniconda3/bin)
+  if(SPHINX_BUILD)
+    add_custom_target(sphinx
+      COMMAND ${SPHINX_BUILD} -b html
+              ${CMAKE_SOURCE_DIR}/sphinx
+              ${CMAKE_SOURCE_DIR}/docs/sphinx
+      DEPENDS docs
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      COMMENT "Generating Sphinx documentation"
+      VERBATIM)
+  endif()
 endif()
 
 if(PROJECT_TOPIC STREQUAL NOT_SELECTED)
