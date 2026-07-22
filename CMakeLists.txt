@@ -24,8 +24,7 @@ if(DOXYGEN_FOUND)
     COMMENT "Generating documentation with Doxygen"
     VERBATIM)
 
-  find_program(SPHINX_BUILD sphinx-build
-    HINTS /home/theprelior/miniconda3/bin)
+  find_program(SPHINX_BUILD sphinx-build)
   if(SPHINX_BUILD)
     add_custom_target(sphinx
       COMMAND ${SPHINX_BUILD} -b html
