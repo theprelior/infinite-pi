@@ -3,7 +3,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string_view>
 
+#ifdef PI_USE_GMP_BACKEND
+#include <boost/multiprecision/gmp.hpp>
+using BigInt = pi::mp::mpz_int;
+#else
 using BigInt = pi::mp::cpp_int;
+#endif
 
 // First 100 verified decimal digits of pi (NIST reference).
 static constexpr std::string_view PI_KNOWN_100 =

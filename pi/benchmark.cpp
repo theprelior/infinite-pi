@@ -6,7 +6,12 @@
 #include <string>
 #include <vector>
 
+#ifdef PI_USE_GMP_BACKEND
+#include <boost/multiprecision/gmp.hpp>
+using BigInt = pi::mp::mpz_int;
+#else
 using BigInt = pi::mp::cpp_int;
+#endif
 
 struct BenchResult {
     int    digits;

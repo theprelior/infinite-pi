@@ -17,8 +17,15 @@ if(BUILD_REFERENCE)
 	]]
 endif()
 
+option(PI_USE_GMP_BACKEND "Use boost::multiprecision::mpz_int (GMP) instead of cpp_int" OFF)
+
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
+
+if(PI_USE_GMP_BACKEND)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(GMP REQUIRED IMPORTED_TARGET gmp)
+endif()
 
 add_executable(pi main.cpp)
 target_compile_features(pi PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")
@@ -33,3 +40,10 @@ target_link_libraries(test_pi PRIVATE Boost::boost Threads::Threads Catch2::Catc
 add_executable(benchmark benchmark.cpp)
 target_compile_features(benchmark PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")
 target_link_libraries(benchmark PRIVATE Boost::boost Threads::Threads)
+
+if(PI_USE_GMP_BACKEND)
+  foreach(tgt pi test_pi benchmark)
+    target_compile_definitions(${tgt} PRIVATE PI_USE_GMP_BACKEND)
+    target_link_libraries(${tgt} PRIVATE PkgConfig::GMP)
+  endforeach()
+endif()
