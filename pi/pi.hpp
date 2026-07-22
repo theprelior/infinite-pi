@@ -50,9 +50,9 @@ concept Arithmetic = Multipliable<T> && requires(T a, T b) {
 /// @tparam IntType An integer type satisfying the Arithmetic concept.
 template <Arithmetic IntType>
 struct SplitResult {
-    IntType P; ///< Numerator accumulator
-    IntType Q; ///< Denominator accumulator
-    IntType T; ///< Series term accumulator
+    IntType P; ///< Numerator accumulator   // NOLINT(readability-identifier-naming)
+    IntType Q; ///< Denominator accumulator // NOLINT(readability-identifier-naming)
+    IntType T; ///< Series term accumulator // NOLINT(readability-identifier-naming)
 };
 
 /// @brief Recursively computes the Chudnovsky binary splitting over [a, b).
@@ -145,7 +145,7 @@ SplitResult<IntType> parallel_split_impl(int a, int b, int depth, int max_depth)
 /// @return SplitResult containing accumulated P, Q, T for the range [a, b).
 template <Arithmetic IntType>
 SplitResult<IntType> parallel_binary_split(int a, int b) {
-    const unsigned n_hw  = std::max(2u, std::thread::hardware_concurrency());
+    const unsigned n_hw  = std::max(2U, std::thread::hardware_concurrency());
     const int max_depth  = static_cast<int>(std::log2(static_cast<double>(n_hw)));
     return detail::parallel_split_impl<IntType>(a, b, 0, max_depth);
 }
@@ -193,9 +193,9 @@ std::string compute_pi_from_split(const SplitResult<IntType>& result, int num_di
     int precision = num_digits + 20;
     IntType scale    = mp::pow(IntType(10), precision);
     IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
-    IntType abs_T    = result.T < 0 ? -result.T : result.T;
+    IntType abs_t    = result.T < 0 ? -result.T : result.T;
     IntType pi_int   = IntType(4270934400LL) * result.Q * scale * scale
-                       / (sqrt_val * abs_T);
+                       / (sqrt_val * abs_t);
     std::string s = pi_int.str();
     if (static_cast<int>(s.size()) > num_digits + 1) {
         s = s.substr(0, num_digits + 1);
@@ -249,12 +249,12 @@ compute_pi_checked(int num_terms, int num_digits) {
 /// @return sqrt(pi) as a string, e.g. "1.77245..."
 template <Arithmetic IntType>
 std::string compute_sqrt_pi_from_split(const SplitResult<IntType>& result, int num_digits) {
-    int N            = num_digits + 20;
-    IntType scale    = mp::pow(IntType(10), 2 * N);
+    int precision    = num_digits + 20;
+    IntType scale    = mp::pow(IntType(10), 2 * precision);
     IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
-    IntType abs_T    = result.T < 0 ? -result.T : result.T;
+    IntType abs_t    = result.T < 0 ? -result.T : result.T;
     IntType pi_big   = IntType(4270934400LL) * result.Q * scale * scale
-                       / (sqrt_val * abs_T);
+                       / (sqrt_val * abs_t);
     IntType sqrt_pi_int = isqrt<IntType>(pi_big);
     std::string s = sqrt_pi_int.str();
     if (static_cast<int>(s.size()) > num_digits + 1) {

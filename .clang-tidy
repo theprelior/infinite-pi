@@ -11,8 +11,10 @@ Checks: >
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -modernize-use-constraints,
+  -modernize-use-auto,
   -readability-identifier-length,
-  -readability-isolate-declaration
+  -readability-isolate-declaration,
+  -readability-avoid-nested-conditional-operator
 
 WarningsAsErrors: ''
 

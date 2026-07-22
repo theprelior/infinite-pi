@@ -33,7 +33,7 @@ std::expected<Args, std::string> parse_args(int argc, char** argv) {
         } else {
             try {
                 args.num_digits = std::stoi(argv[i]);
-                if (args.num_digits <= 0) throw std::out_of_range("must be positive");
+                if (args.num_digits <= 0) { throw std::out_of_range("must be positive"); }
             } catch (const std::invalid_argument&) {
                 return std::unexpected(std::format("'{}' is not a valid number", argv[i]));
             } catch (const std::out_of_range&) {
@@ -56,8 +56,11 @@ int main(int argc, char** argv) {
 
     std::cout << std::format("Digits requested : {}\n", args.num_digits);
     std::cout << std::format("Terms needed     : {}\n", num_terms);
-    std::cout << std::format("Mode             : {}\n",
-        args.use_sqrt ? "sqrt(pi)" : (args.use_parallel ? "parallel" : "sequential"));
+    std::string mode;
+    if (args.use_sqrt)          { mode = "sqrt(pi)";   }
+    else if (args.use_parallel) { mode = "parallel";   }
+    else                        { mode = "sequential"; }
+    std::cout << std::format("Mode             : {}\n", mode);
 
     try {
         pi::Timer t;
