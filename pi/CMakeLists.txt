@@ -24,9 +24,11 @@ add_executable(pi main.cpp)
 target_compile_features(pi PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")
 target_link_libraries(pi PRIVATE Boost::boost Threads::Threads)
 
+find_package(Catch2 3 REQUIRED)
+
 add_executable(test_pi test_pi.cpp)
 target_compile_features(test_pi PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")
-target_link_libraries(test_pi PRIVATE Boost::boost Threads::Threads)
+target_link_libraries(test_pi PRIVATE Boost::boost Threads::Threads Catch2::Catch2WithMain)
 
 add_executable(benchmark benchmark.cpp)
 target_compile_features(benchmark PRIVATE "cxx_std_${PROJECT_CXX_STANDARD}")

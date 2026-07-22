@@ -1,99 +1,82 @@
 #include "pi.hpp"
 
-#include <cassert>
-#include <iostream>
-#include <string>
+#include <catch2/catch_test_macros.hpp>
 
 using BigInt = pi::mp::cpp_int;
 
-static void test_concepts() {
-    static_assert(pi::Arithmetic<BigInt>, "BigInt must satisfy Arithmetic");
-    static_assert(pi::Arithmetic<int>,    "int must satisfy Arithmetic");
-    static_assert(pi::Arithmetic<double>, "double must satisfy Arithmetic");
-    std::cout << "[PASS] concepts\n";
+TEST_CASE("Arithmetic concept is satisfied", "[concepts]") {
+    STATIC_REQUIRE(pi::Arithmetic<BigInt>);
+    STATIC_REQUIRE(pi::Arithmetic<int>);
+    STATIC_REQUIRE(pi::Arithmetic<double>);
 }
 
-static void test_binary_split_base_cases() {
-    auto r0 = pi::binary_split<BigInt>(0, 1);
-    assert(r0.P == 1);
-    assert(r0.Q == 1);
-    assert(r0.T == 13591409);
+TEST_CASE("binary_split base cases", "[binary_split]") {
+    SECTION("k=0: P=1, Q=1, T=13591409") {
+        auto r = pi::binary_split<BigInt>(0, 1);
+        REQUIRE(r.P == 1);
+        REQUIRE(r.Q == 1);
+        REQUIRE(r.T == 13591409);
+    }
 
-    auto r1 = pi::binary_split<BigInt>(1, 2);
-    assert(r1.P == -5);
-
-    std::cout << "[PASS] binary_split base cases\n";
+    SECTION("k=1: P=-5") {
+        auto r = pi::binary_split<BigInt>(1, 2);
+        REQUIRE(r.P == -5);
+    }
 }
 
-static void test_binary_split_merge() {
+TEST_CASE("binary_split merge formula", "[binary_split]") {
     auto left  = pi::binary_split<BigInt>(0, 1);
     auto right = pi::binary_split<BigInt>(1, 2);
     BigInt expected_T = left.T * right.Q + left.P * right.T;
 
     auto merged = pi::binary_split<BigInt>(0, 2);
-    assert(merged.T == expected_T);
-
-    std::cout << "[PASS] binary_split merge\n";
+    REQUIRE(merged.T == expected_T);
 }
 
-static void test_isqrt() {
-    assert(pi::isqrt<BigInt>(BigInt(0))   == 0);
-    assert(pi::isqrt<BigInt>(BigInt(1))   == 1);
-    assert(pi::isqrt<BigInt>(BigInt(9))   == 3);
-    assert(pi::isqrt<BigInt>(BigInt(10))  == 3);
-    assert(pi::isqrt<BigInt>(BigInt(100)) == 10);
+TEST_CASE("isqrt correctness", "[isqrt]") {
+    REQUIRE(pi::isqrt<BigInt>(BigInt(0))   == 0);
+    REQUIRE(pi::isqrt<BigInt>(BigInt(1))   == 1);
+    REQUIRE(pi::isqrt<BigInt>(BigInt(9))   == 3);
+    REQUIRE(pi::isqrt<BigInt>(BigInt(10))  == 3);
+    REQUIRE(pi::isqrt<BigInt>(BigInt(100)) == 10);
 
     BigInt big = pi::mp::pow(BigInt(10), 52);
-    assert(pi::isqrt<BigInt>(big) == pi::mp::pow(BigInt(10), 26));
-
-    std::cout << "[PASS] isqrt\n";
+    REQUIRE(pi::isqrt<BigInt>(big) == pi::mp::pow(BigInt(10), 26));
 }
 
-static void test_estimate_terms() {
-    assert(pi::estimate_terms(50)   ==  6);
-    assert(pi::estimate_terms(100)  == 10);
-    assert(pi::estimate_terms(1000) == 73);
-    std::cout << "[PASS] estimate_terms\n";
+TEST_CASE("estimate_terms", "[estimate_terms]") {
+    REQUIRE(pi::estimate_terms(50)   ==  6);
+    REQUIRE(pi::estimate_terms(100)  == 10);
+    REQUIRE(pi::estimate_terms(1000) == 73);
 }
 
-static void test_compute_pi_prefix() {
-    std::string pi50 = pi::compute_pi<BigInt>(pi::estimate_terms(50), 50);
-    assert(pi50.substr(0, 7) == "3.14159");
+TEST_CASE("compute_pi output", "[compute_pi]") {
+    SECTION("50 digits start with 3.14159") {
+        auto pi50 = pi::compute_pi<BigInt>(pi::estimate_terms(50), 50);
+        REQUIRE(pi50.substr(0, 7) == "3.14159");
+    }
 
-    std::string pi100 = pi::compute_pi<BigInt>(pi::estimate_terms(100), 100);
-    assert(pi100.size() == 102); // "3." + 100 digits
-    assert(pi100.substr(0, 7) == "3.14159");
-
-    std::cout << "[PASS] compute_pi prefix\n";
+    SECTION("100 digits correct length") {
+        auto pi100 = pi::compute_pi<BigInt>(pi::estimate_terms(100), 100);
+        REQUIRE(pi100.size() == 102);
+        REQUIRE(pi100.substr(0, 7) == "3.14159");
+    }
 }
 
-static void test_pi_computer() {
+TEST_CASE("PiComputer", "[PiComputer]") {
     pi::PiComputer<BigInt> computer(50);
-    std::string p  = computer.pi();
-    std::string sp = computer.sqrt_pi();
-    assert(p.substr(0, 7)  == "3.14159");
-    assert(sp.substr(0, 10) == "1.77245385");
-    std::cout << "[PASS] PiComputer\n";
+
+    SECTION("pi() starts with 3.14159") {
+        REQUIRE(computer.pi().substr(0, 7) == "3.14159");
+    }
+
+    SECTION("sqrt_pi() starts with 1.77245385") {
+        REQUIRE(computer.sqrt_pi().substr(0, 10) == "1.77245385");
+    }
 }
 
-static void test_compute_sqrt_pi() {
-    // sqrt(pi) = 1.7724538509055159...
-    std::string sqpi = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(30), 30);
-    assert(sqpi.substr(0, 10) == "1.77245385");
-    assert(static_cast<int>(sqpi.size()) == 32); // "1." + 30 digits
-    std::cout << "[PASS] compute_sqrt_pi\n";
-}
-
-int main() {
-    test_concepts();
-    test_binary_split_base_cases();
-    test_binary_split_merge();
-    test_isqrt();
-    test_estimate_terms();
-    test_compute_pi_prefix();
-    test_pi_computer();
-    test_compute_sqrt_pi();
-
-    std::cout << "\nAll tests passed.\n";
-    return 0;
+TEST_CASE("compute_sqrt_pi", "[sqrt_pi]") {
+    auto sqpi = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(30), 30);
+    REQUIRE(sqpi.substr(0, 10) == "1.77245385");
+    REQUIRE(static_cast<int>(sqpi.size()) == 32);
 }
