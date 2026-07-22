@@ -67,6 +67,14 @@ static void test_compute_pi_prefix() {
     std::cout << "[PASS] compute_pi prefix\n";
 }
 
+static void test_compute_sqrt_pi() {
+    // sqrt(pi) = 1.7724538509055159...
+    std::string sqpi = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(30), 30);
+    assert(sqpi.substr(0, 10) == "1.77245385");
+    assert(static_cast<int>(sqpi.size()) == 32); // "1." + 30 digits
+    std::cout << "[PASS] compute_sqrt_pi\n";
+}
+
 int main() {
     test_concepts();
     test_binary_split_base_cases();
@@ -74,6 +82,7 @@ int main() {
     test_isqrt();
     test_estimate_terms();
     test_compute_pi_prefix();
+    test_compute_sqrt_pi();
 
     std::cout << "\nAll tests passed.\n";
     return 0;

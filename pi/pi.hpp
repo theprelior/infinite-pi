@@ -142,6 +142,28 @@ std::string compute_pi(int num_terms, int num_digits) {
     return compute_pi_from_split<IntType>(result, num_digits);
 }
 
+// Compute sqrt(pi) to num_digits decimal places.
+//
+// Strategy: compute pi × 10^(2*N) as a big integer, then take isqrt.
+//   isqrt(pi × 10^(2*N)) ≈ sqrt(pi) × 10^N
+// where N = num_digits + 20 (extra guard digits).
+template <Arithmetic IntType>
+std::string compute_sqrt_pi(int num_terms, int num_digits) {
+    int N         = num_digits + 20;
+    auto result   = binary_split<IntType>(0, num_terms);
+    IntType scale    = mp::pow(IntType(10), 2 * N);
+    IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
+    IntType abs_T    = result.T < 0 ? -result.T : result.T;
+    IntType pi_big   = IntType(4270934400LL) * result.Q * scale * scale
+                       / (sqrt_val * abs_T);
+    IntType sqrt_pi_int = isqrt<IntType>(pi_big);
+    std::string s = sqrt_pi_int.str();
+    if (static_cast<int>(s.size()) > num_digits + 1) {
+        s = s.substr(0, num_digits + 1);
+    }
+    return s.substr(0, 1) + "." + s.substr(1);
+}
+
 // RAII timer: starts on construction, call elapsed_ms() to read elapsed time.
 class Timer {
   public:
