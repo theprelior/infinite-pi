@@ -233,11 +233,11 @@ std::string compute_sqrt_pi(int num_terms, int num_digits) {
 class Timer {
   public:
     /// @brief Starts the timer.
-    Timer() : start_(std::chrono::high_resolution_clock::now()) {}
+    Timer() noexcept : start_(std::chrono::high_resolution_clock::now()) {}
 
     /// @brief Returns elapsed time in milliseconds since construction.
     /// @return Elapsed milliseconds as a double.
-    [[nodiscard]] double elapsed_ms() const {
+    [[nodiscard]] double elapsed_ms() const noexcept {
         auto now = std::chrono::high_resolution_clock::now();
         return std::chrono::duration<double, std::milli>(now - start_).count();
     }
@@ -253,8 +253,8 @@ class Timer {
 ///
 /// @param digits Desired number of decimal digits.
 /// @return Number of terms required.
-inline int estimate_terms(int digits) {
-    return static_cast<int>(std::ceil(static_cast<double>(digits) / 14.18)) + 2;
+[[nodiscard]] constexpr int estimate_terms(int digits) noexcept {
+    return static_cast<int>(digits / 14.18) + 3;
 }
 
 /// @brief High-level wrapper that owns the binary split result and exposes pi() and sqrt_pi().
@@ -283,11 +283,11 @@ class PiComputer {
 
     /// @brief Returns pi to num_digits decimal places.
     /// @return Pi as a string, e.g. "3.14159..."
-    std::string pi()      const { return compute_pi_from_split<IntType>(*split_, num_digits_); }
+    [[nodiscard]] std::string pi()      const { return compute_pi_from_split<IntType>(*split_, num_digits_); }
 
     /// @brief Returns sqrt(pi) to num_digits decimal places.
     /// @return sqrt(pi) as a string, e.g. "1.77245..."
-    std::string sqrt_pi() const { return compute_sqrt_pi_from_split<IntType>(*split_, num_digits_); }
+    [[nodiscard]] std::string sqrt_pi() const { return compute_sqrt_pi_from_split<IntType>(*split_, num_digits_); }
 
   private:
     int                                   num_digits_;
