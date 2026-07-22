@@ -8,6 +8,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <concepts>
@@ -88,29 +89,35 @@ SplitResult<IntType> binary_split(int a, int b) {
     };
 }
 
-/// @brief Parallel version of binary_split using std::thread.
+/// @namespace pi::detail
+/// @brief Internal implementation helpers — not part of the public API.
+namespace detail {
+
+/// @brief Recursive parallel implementation with depth-limited thread spawning.
 ///
-/// Computes the left half [a, mid) in a separate thread while the main thread
-/// handles the right half [mid, b). Both results are merged after joining.
-///
-/// For small ranges (b - a <= 1) falls back to binary_split to avoid
-/// the overhead of spawning a thread for trivial work.
+/// At each level, the left half is dispatched to a new std::thread while the right
+/// half is computed on the calling thread. Recursion stops when depth reaches
+/// max_depth (derived from hardware_concurrency) or the range is trivially small.
 ///
 /// @tparam IntType An integer type satisfying the Arithmetic concept.
-/// @param a Start index (inclusive).
-/// @param b End index (exclusive).
+/// @param a         Start index (inclusive).
+/// @param b         End index (exclusive).
+/// @param depth     Current recursion depth (starts at 0).
+/// @param max_depth Maximum depth at which new threads are spawned.
 /// @return SplitResult containing accumulated P, Q, T for the range [a, b).
 template <Arithmetic IntType>
-SplitResult<IntType> parallel_binary_split(int a, int b) {
-    if (b - a <= 1) {
+SplitResult<IntType> parallel_split_impl(int a, int b, int depth, int max_depth) {
+    if (b - a <= 1 || depth >= max_depth) {
         return binary_split<IntType>(a, b);
     }
 
     int mid = (a + b) / 2;
     SplitResult<IntType> left, right;
 
-    std::thread t([&]() { left = binary_split<IntType>(a, mid); });
-    right = binary_split<IntType>(mid, b);
+    std::thread t([&]() {
+        left = parallel_split_impl<IntType>(a, mid, depth + 1, max_depth);
+    });
+    right = parallel_split_impl<IntType>(mid, b, depth + 1, max_depth);
     t.join();
 
     return {
@@ -118,6 +125,27 @@ SplitResult<IntType> parallel_binary_split(int a, int b) {
         left.Q * right.Q,
         left.T * right.Q + left.P * right.T
     };
+}
+
+} // namespace detail
+
+/// @brief Parallel version of binary_split using recursive thread spawning.
+///
+/// Automatically scales to std::thread::hardware_concurrency() threads.
+/// The recursion depth is limited to log2(hardware_concurrency), so on a
+/// 4-core machine 4 threads are used; on 8-core, 8 threads.
+///
+/// Falls back to sequential binary_split for ranges too small to benefit.
+///
+/// @tparam IntType An integer type satisfying the Arithmetic concept.
+/// @param a Start index (inclusive).
+/// @param b End index (exclusive).
+/// @return SplitResult containing accumulated P, Q, T for the range [a, b).
+template <Arithmetic IntType>
+SplitResult<IntType> parallel_binary_split(int a, int b) {
+    const unsigned n_hw  = std::max(2u, std::thread::hardware_concurrency());
+    const int max_depth  = static_cast<int>(std::log2(static_cast<double>(n_hw)));
+    return detail::parallel_split_impl<IntType>(a, b, 0, max_depth);
 }
 
 /// @brief Integer square root using Newton's method.
