@@ -1,0 +1,13 @@
+PROJECT_NAME           = "Infinite Pi"
+PROJECT_BRIEF          = "Chudnovsky algorithm with binary splitting for arbitrary-precision pi"
+OUTPUT_DIRECTORY       = docs
+INPUT                  = pi/pi.hpp pi/main.cpp pi/test_pi.cpp pi/benchmark.cpp
+RECURSIVE              = NO
+EXTRACT_ALL            = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+QUIET                  = YES
+WARNINGS               = YES
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+BUILTIN_STL_SUPPORT    = YES

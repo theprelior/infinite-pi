@@ -16,6 +16,15 @@ set(PROJECT_TOPIC
 set_property(CACHE PROJECT_TOPIC PROPERTY STRINGS NOT_SELECTED QRCODE VIGENERE
                                           PI)
 
+find_package(Doxygen OPTIONAL_COMPONENTS dot)
+if(DOXYGEN_FOUND)
+  add_custom_target(docs
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Generating documentation with Doxygen"
+    VERBATIM)
+endif()
+
 if(PROJECT_TOPIC STREQUAL NOT_SELECTED)
   message(FATAL_ERROR "Please select a topic.")
 elseif(PROJECT_TOPIC STREQUAL QRCODE)
