@@ -30,17 +30,17 @@ int main(int argc, char** argv) {
 
     pi::Timer t;
 
-    std::string result;
-    if (use_sqrt) {
-        result = pi::compute_sqrt_pi<BigInt>(num_terms, num_digits);
-        std::cout << "sqrt(pi) = " << result << "\n";
-    } else if (use_parallel) {
-        auto split = pi::parallel_binary_split<BigInt>(0, num_terms);
-        result = pi::compute_pi_from_split<BigInt>(split, num_digits);
+    if (use_parallel) {
+        auto split  = pi::parallel_binary_split<BigInt>(0, num_terms);
+        std::string result = pi::compute_pi_from_split<BigInt>(split, num_digits);
         std::cout << "pi = " << result << "\n";
     } else {
-        result = pi::compute_pi<BigInt>(num_terms, num_digits);
-        std::cout << "pi = " << result << "\n";
+        pi::PiComputer<BigInt> computer(num_digits);
+        if (use_sqrt) {
+            std::cout << "sqrt(pi) = " << computer.sqrt_pi() << "\n";
+        } else {
+            std::cout << "pi = " << computer.pi() << "\n";
+        }
     }
 
     std::cout << "Time             : " << t.elapsed_ms() << " ms\n";

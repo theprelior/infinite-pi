@@ -67,6 +67,15 @@ static void test_compute_pi_prefix() {
     std::cout << "[PASS] compute_pi prefix\n";
 }
 
+static void test_pi_computer() {
+    pi::PiComputer<BigInt> computer(50);
+    std::string p  = computer.pi();
+    std::string sp = computer.sqrt_pi();
+    assert(p.substr(0, 7)  == "3.14159");
+    assert(sp.substr(0, 10) == "1.77245385");
+    std::cout << "[PASS] PiComputer\n";
+}
+
 static void test_compute_sqrt_pi() {
     // sqrt(pi) = 1.7724538509055159...
     std::string sqpi = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(30), 30);
@@ -82,6 +91,7 @@ int main() {
     test_isqrt();
     test_estimate_terms();
     test_compute_pi_prefix();
+    test_pi_computer();
     test_compute_sqrt_pi();
 
     std::cout << "\nAll tests passed.\n";

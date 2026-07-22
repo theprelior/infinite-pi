@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cmath>
 #include <concepts>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -142,15 +143,9 @@ std::string compute_pi(int num_terms, int num_digits) {
     return compute_pi_from_split<IntType>(result, num_digits);
 }
 
-// Compute sqrt(pi) to num_digits decimal places.
-//
-// Strategy: compute pi × 10^(2*N) as a big integer, then take isqrt.
-//   isqrt(pi × 10^(2*N)) ≈ sqrt(pi) × 10^N
-// where N = num_digits + 20 (extra guard digits).
 template <Arithmetic IntType>
-std::string compute_sqrt_pi(int num_terms, int num_digits) {
-    int N         = num_digits + 20;
-    auto result   = binary_split<IntType>(0, num_terms);
+std::string compute_sqrt_pi_from_split(const SplitResult<IntType>& result, int num_digits) {
+    int N            = num_digits + 20;
     IntType scale    = mp::pow(IntType(10), 2 * N);
     IntType sqrt_val = isqrt<IntType>(IntType(10005) * scale * scale);
     IntType abs_T    = result.T < 0 ? -result.T : result.T;
@@ -162,6 +157,12 @@ std::string compute_sqrt_pi(int num_terms, int num_digits) {
         s = s.substr(0, num_digits + 1);
     }
     return s.substr(0, 1) + "." + s.substr(1);
+}
+
+template <Arithmetic IntType>
+std::string compute_sqrt_pi(int num_terms, int num_digits) {
+    auto result = binary_split<IntType>(0, num_terms);
+    return compute_sqrt_pi_from_split<IntType>(result, num_digits);
 }
 
 // RAII timer: starts on construction, call elapsed_ms() to read elapsed time.
@@ -183,5 +184,25 @@ class Timer {
 inline int estimate_terms(int digits) {
     return static_cast<int>(std::ceil(static_cast<double>(digits) / 14.18)) + 2;
 }
+
+// PiComputer owns the binary-split result via unique_ptr and exposes
+// pi() and sqrt_pi() — both reuse the same split without recomputing it.
+template <Arithmetic IntType>
+class PiComputer {
+  public:
+    explicit PiComputer(int num_digits)
+        : num_digits_(num_digits),
+          num_terms_(estimate_terms(num_digits)),
+          split_(std::make_unique<SplitResult<IntType>>(
+              binary_split<IntType>(0, num_terms_))) {}
+
+    std::string pi()      const { return compute_pi_from_split<IntType>(*split_, num_digits_); }
+    std::string sqrt_pi() const { return compute_sqrt_pi_from_split<IntType>(*split_, num_digits_); }
+
+  private:
+    int                                   num_digits_;
+    int                                   num_terms_;
+    std::unique_ptr<SplitResult<IntType>> split_;
+};
 
 } // namespace end of pi
