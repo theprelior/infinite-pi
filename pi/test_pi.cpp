@@ -11,12 +11,12 @@ using BigInt = pi::mp::cpp_int;
 #endif
 
 // First 100 verified decimal digits of pi (NIST reference).
-static constexpr std::string_view PI_KNOWN_100 =
+static constexpr std::string_view pi_known_100 =
     "3.14159265358979323846264338327950288419716939937510"
     "58209749445923078164062862089986280348253421170679";
 
 // First 50 verified decimal digits of sqrt(pi).
-static constexpr std::string_view SQRT_PI_KNOWN_50 =
+static constexpr std::string_view sqrt_pi_known_50 =
     "1.77245385090551602729816748334114518279754945612238";
 
 TEST_CASE("Arithmetic concept is satisfied", "[concepts]") {
@@ -42,10 +42,10 @@ TEST_CASE("binary_split base cases", "[binary_split]") {
 TEST_CASE("binary_split merge formula", "[binary_split]") {
     auto left  = pi::binary_split<BigInt>(0, 1);
     auto right = pi::binary_split<BigInt>(1, 2);
-    BigInt expected_T = left.T * right.Q + left.P * right.T;
+    BigInt expected_t = left.T * right.Q + left.P * right.T;
 
     auto merged = pi::binary_split<BigInt>(0, 2);
-    REQUIRE(merged.T == expected_T);
+    REQUIRE(merged.T == expected_t);
 }
 
 TEST_CASE("binary_split P is multiplicative", "[binary_split]") {
@@ -116,12 +116,12 @@ TEST_CASE("compute_pi output", "[compute_pi]") {
 
 TEST_CASE("pi matches verified reference digits", "[verification]") {
     auto computed = pi::compute_pi<BigInt>(pi::estimate_terms(100), 100);
-    REQUIRE(computed == PI_KNOWN_100);
+    REQUIRE(computed == pi_known_100);
 }
 
 TEST_CASE("sqrt(pi) matches verified reference digits", "[verification]") {
     auto computed = pi::compute_sqrt_pi<BigInt>(pi::estimate_terms(50), 50);
-    REQUIRE(computed == SQRT_PI_KNOWN_50);
+    REQUIRE(computed == sqrt_pi_known_50);
 }
 
 TEST_CASE("compute_pi_from_split matches compute_pi", "[compute_pi]") {
