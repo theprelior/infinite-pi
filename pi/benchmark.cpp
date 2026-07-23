@@ -59,7 +59,11 @@ int main(int argc, char** argv) {
     std::vector<int> sizes = {100, 500, 1000, 5000, 10000};
 
     // ── Section 1: Sequential vs Parallel ───────────────────────────────────
+#ifdef PI_USE_GMP_BACKEND
+    std::cout << "\n=== Sequential vs Parallel (Boost mpz_int / GMP) ===\n\n";
+#else
     std::cout << "\n=== Sequential vs Parallel (Boost cpp_int) ===\n\n";
+#endif
     std::cout << std::left
               << std::setw(10) << "Digits"
               << std::setw(16) << "Sequential(ms)"

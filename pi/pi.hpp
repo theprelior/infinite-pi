@@ -3,7 +3,7 @@
 /// @file pi.hpp
 /// @brief Chudnovsky algorithm with binary splitting for computing pi to arbitrary precision.
 ///
-/// Uses Boost.Multiprecision (cpp_int) for arbitrary-precision integers.
+/// Uses Boost.Multiprecision (cpp_int or mpz_int) for arbitrary-precision integers.
 /// All templates are constrained with C++20 concepts.
 
 #include <boost/multiprecision/cpp_int.hpp>
